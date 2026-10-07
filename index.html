@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <!-- Règle de sécurité (audit du 23/08/2026). L'essentiel ici est connect-src :
+       même si du code étranger arrivait à s'exécuter, il ne pourrait envoyer vos
+       fiches QUE vers le site Immigration Voyages et les deux services de taux —
+       aucune autre adresse n'est joignable. 'unsafe-inline' reste nécessaire pour
+       les boutons de l'application ; la vraie barrière contre l'injection est la
+       protection des identifiants et leur contrôle à la réception. -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'unsafe-inline';
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' data:;
+    font-src 'self';
+    worker-src 'self'; manifest-src 'self';
+    connect-src 'self' https://uhfjegbrodjlcmgjicfo.supabase.co https://api.frankfurter.dev https://open.er-api.com;
+    object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none';">
+  <title>IV Clients</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icone-192.png">
+  <link rel="apple-touch-icon" href="assets/icone-192.png">
+  <meta name="theme-color" content="#1E3F76">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="IV Clients">
+</head>
+<body>
+  <!-- Écran d'ouverture : le mode est choisi à CHAQUE lancement, jamais mémorisé.
+       Les deux boutons portent leur seul intitulé. RIEN ne doit décrire ce que
+       contient le mode administrateur : cet écran est vu par tout le monde, et
+       annoncer « finances comprises » revient à désigner ce qu'il y a à ouvrir.
+       Le détail des deux modes vit dans Paramètres > Ouverture de l'application,
+       carte qui n'existe que dans une ouverture administrateur. -->
+  <div id="ouverture" class="lock-screen" hidden>
+    <div class="lock-card">
+      <img src="assets/logo-full.png" alt="IV Clients" class="lock-logo">
+
+      <div id="ouv-choix">
+        <p>Comment souhaitez-vous ouvrir l'application ?</p>
+        <button id="ouv-admin" class="role-btn role-admin">
+          <span class="role-titre">Administrateur</span>
+        </button>
+        <button id="ouv-assist" class="role-btn">
+          <span class="role-titre">Assistant(e)</span>
+        </button>
+      </div>
+
+      <div id="ouv-mdp" hidden>
+        <p>Mot de passe administrateur</p>
+        <input type="password" id="lock-input" placeholder="Mot de passe" autocomplete="off">
+        <button id="lock-btn" class="btn btn-primary">Ouvrir</button>
+        <p id="lock-err" class="lock-err" hidden>Mot de passe incorrect.</p>
+        <button id="ouv-oubli" class="lien-retour">Mot de passe oublié ?</button>
+        <button id="ouv-retour" class="lien-retour">← Choisir un autre mode</button>
+      </div>
+
+      <!-- Le double des clés : le code remis à la création du mot de passe. -->
+      <div id="ouv-secours" hidden>
+        <p>Saisissez votre code de secours</p>
+        <input type="text" id="secours-input" placeholder="XXXXX-XXXXX-XXXXX-XXXXX" autocomplete="off" spellcheck="false">
+        <button id="secours-btn" class="btn btn-primary">Valider</button>
+        <p id="secours-err" class="lock-err" hidden>Ce code ne correspond pas.</p>
+        <button id="secours-retour" class="lien-retour">← Revenir au mot de passe</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="shell" class="shell" hidden>
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-badge"><img src="assets/icon.png" alt="Logo"></span>
+        <div>
+          <div class="brand-name">IV Clients</div>
+          <div class="brand-sub">Suivi dossier immigration</div>
+        </div>
+      </div>
+      <nav id="nav">
+        <button class="nav-btn" data-view="dashboard">
+          <svg viewBox="0 0 24 24"><path d="M3 12l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>
+          Tableau de bord
+        </button>
+        <button class="nav-btn" data-view="clients">
+          <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.5c3 .2 5.5 2.3 5.5 5.5"/></svg>
+          Clients
+        </button>
+        <button class="nav-btn" data-view="settings">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h0a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55h0a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>
+          Paramètres
+        </button>
+      </nav>
+      <div class="sidebar-foot">
+        <div id="foot-role" class="foot-role"></div>
+        <div id="foot-version">v1.0.0</div>
+        <div>Conçu par Alex NGASSA</div>
+      </div>
+    </aside>
+    <main id="main" class="main"></main>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+  <aside id="maj-bulle" class="maj-bulle" role="status" aria-live="polite" hidden></aside>
+
+  <div id="modal" class="modal-overlay" hidden>
+    <div class="modal-card">
+      <h3 id="modal-title"></h3>
+      <input id="modal-input" type="text">
+      <div class="modal-actions">
+        <button id="modal-cancel" class="btn btn-ghost">Annuler</button>
+        <button id="modal-ok" class="btn btn-primary">Valider</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="paquet.js"></script>
+  <script src="mobile.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>

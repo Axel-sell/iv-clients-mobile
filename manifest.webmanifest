@@ -1,0 +1,30 @@
+{
+ "name": "IV Clients",
+ "short_name": "IV Clients",
+ "description": "Suivi des dossiers clients d'Immigration Voyages",
+ "lang": "fr",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "any",
+ "background_color": "#F4F7FB",
+ "theme_color": "#1E3F76",
+ "icons": [
+  {
+   "src": "assets/icone-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "assets/icone-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "assets/icone-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
